@@ -76,6 +76,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mFixedLeaderPartitionId(0),
     mRouterRoleEnabled(true),
     mIsRouterRestoringChildren(false),
+    mAddressSolicitPending(false),
     mPreviousPartitionId(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
@@ -1687,6 +1688,8 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     LogMleMessage("Receive Parent Request", aMessageInfo.GetPeerAddr());
 
+    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
+
     // A Router MUST NOT send an MLE Parent Response if:
 
     // 1. It has no available Child capacity (if Max Child Count minus
@@ -2133,6 +2136,8 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
 
     LogMleMessage("Receive Child ID Request", aMessageInfo.GetPeerAddr());
 
+    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
+
     // only process message when operating as a child, router, or leader
     VerifyOrExit(mRole >= OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
 
@@ -2413,6 +2418,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     TimeoutTlv timeout;
     AddressRegistrationTlv address;
     ResponseTlv response;
+    StatusTlv status;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv mleFrameCounter;
     LeaderDataTlv leaderData;
@@ -2450,6 +2456,19 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
         VerifyOrExit(response.IsValid() &&
                      memcmp(response.GetResponse(), child->GetChallenge(), child->GetChallengeSize()) == 0,
                      error = OT_ERROR_SECURITY);
+    }
+
+    // Status
+    if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+        if (status.GetStatus() == StatusTlv::kError)
+        {
+            RemoveStoredChild(child->GetRloc16());
+            child->SetState(Neighbor::kStateInvalid);
+            ExitNow();
+        }
     }
 
     // Link-Layer Frame Counter
@@ -3919,7 +3938,9 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     ThreadRloc16Tlv rlocTlv;
     ThreadStatusTlv statusTlv;
     Ip6::MessageInfo messageInfo;
-    Message *message;
+    Message *message = NULL;
+
+    VerifyOrExit(mAddressSolicitPending == false);
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -3949,6 +3970,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo,
                                                       &MleRouter::HandleAddressSolicitResponse, this));
+    mAddressSolicitPending = true;
 
     LogMleMessage("Send Address Solicit", messageInfo.GetPeerAddr());
 
@@ -4016,7 +4038,6 @@ void MleRouter::HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHead
 void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
                                              const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
-    OT_UNUSED_VARIABLE(aResult);
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     ThreadStatusTlv statusTlv;
@@ -4025,6 +4046,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     uint8_t routerId;
     Router *router;
     bool old;
+
+    mAddressSolicitPending = false;
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader != NULL && aMessage != NULL);
 
