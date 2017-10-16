@@ -38,6 +38,8 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+override LDFLAGS := $(filter-out --gc-sections,$(LDFLAGS))
+
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
@@ -62,6 +64,9 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3                    \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/bootloader/api                             \
+    -I$(EFR32MG_SDK_SRCDIR)/protocol/bluetooth_2.4/ble_stack/inc/soc            \
     -Wno-unused-parameter                                                       \
     $(NULL)
 
@@ -75,6 +80,7 @@ PLATFORM_SOURCES                                                              = 
     random.c                                                                    \
     startup-gcc.c                                                               \
     uart.c                                                                      \
+    application_properties.c                                                    \ 
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
