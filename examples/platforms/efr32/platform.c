@@ -32,22 +32,22 @@
  *   This file includes the platform-specific initializers.
  */
 
+#include <openthread/platform/uart.h>
 #include <string.h>
 
-#include <openthread/platform/uart.h>
-
-#include "common/logging.hpp"
-
-#include "pa.h"
-#include "pti.h"
+#include "application_properties.h"
+#include "bg_version.h"
 #include "bsp.h"
-#include "em_emu.h"
-#include "em_cmu.h"
+#include "common/logging.hpp"
 #include "em_chip.h"
+#include "em_cmu.h"
+#include "em_emu.h"
+#include "openthread-core-efr32-config.h"
+#include "pa.h"
 #include "platform-efr32.h"
+#include "pti.h"
 #include "rail.h"
 #include "rail_ieee802154.h"
-#include "openthread-core-efr32-config.h"
 
 otInstance *sInstance;
 
@@ -148,3 +148,18 @@ void HAL_Init(void)
 {
     halInitChipSpecific();
 }
+
+__attribute__((used))
+__attribute__ ((section(".application_properties")))
+const ApplicationProperties_t applicationProperties = {
+    .magic = APPLICATION_PROPERTIES_MAGIC,
+    .structVersion = APPLICATION_PROPERTIES_VERSION,
+    .signatureType = APPLICATION_SIGNATURE_NONE,
+    .signatureLocation = 0,
+    .app = {
+        .type = APPLICATION_TYPE_THREAD,
+        .version = 0,
+        .capabilities = (BG_VERSION_MAJOR << 24) | (BG_VERSION_MINOR << 16) | (BG_VERSION_PATCH << 8),
+        .productId = {0},
+    },
+};
