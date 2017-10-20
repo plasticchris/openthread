@@ -1265,7 +1265,7 @@ otError NcpBase::CommandHandler_REBOOT_BOOTLOADER(uint8_t aHeader)
     otError error = OT_ERROR_NONE;
 
     otInstanceRebootBootloader(mInstance);
-    CommandHandler_RESET(aHeader);
+    error = CommandHandler_RESET(aHeader);
 
     return error;
 }

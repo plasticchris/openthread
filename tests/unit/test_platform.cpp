@@ -490,8 +490,6 @@ exit:
         (void)aInstance;
     }
 
-
-
     otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         (void)aInstance;
