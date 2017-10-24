@@ -56,6 +56,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *sInstance;
+    otLinkModeConfig linkMode = {0};
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t otInstanceBufferLength = 0;
@@ -79,11 +80,17 @@ int main(int argc, char *argv[])
 #endif
     assert(sInstance);
 
-    otCliUartInit(sInstance);
+//    otCliUartInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
     otDiagInit(sInstance);
 #endif
+
+    otIp6SetEnabled(sInstance, true);
+    otThreadSetEnabled(sInstance, true);
+    linkMode.mSecureDataRequests = true;
+    otThreadSetLinkMode(sInstance, linkMode);
+    otLinkSetPollPeriod(sInstance, 10000);
 
     while (1)
     {

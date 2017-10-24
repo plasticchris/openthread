@@ -43,6 +43,16 @@
 
 #include <openthread/config.h>
 
+#include "nrf_drv_power.h"
+
+#include <openthread/openthread.h>
+#include <openthread/diag.h>
+#include <openthread/coap.h>
+#include <openthread/cli.h>
+#include <openthread/thread_ftd.h>
+#include <openthread/platform/platform.h>
+#include "platform-softdevice.h"
+
 void __cxa_pure_virtual(void) { while (1); }
 
 void PlatformInit(int argc, char *argv[])
@@ -54,6 +64,7 @@ void PlatformInit(int argc, char *argv[])
     // Enable I-code cache
     NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Enabled;
 #endif
+    NRF_POWER->DCDCEN = 1;                           //Enabling the DCDC converter for lower current consumption
 
     nrf_drv_clock_init();
 
@@ -62,7 +73,7 @@ void PlatformInit(int argc, char *argv[])
 #endif
     nrf5AlarmInit();
     nrf5RandomInit();
-    nrf5UartInit();
+//    nrf5UartInit();
     nrf5MiscInit();
     nrf5CryptoInit();
     nrf5RadioInit();
@@ -75,7 +86,7 @@ void PlatformDeinit(void)
     nrf5RadioDeinit();
     nrf5CryptoDeinit();
     nrf5MiscDeinit();
-    nrf5UartDeinit();
+//    nrf5UartDeinit();
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
@@ -87,7 +98,13 @@ void PlatformProcessDrivers(otInstance *aInstance)
 {
     nrf5AlarmProcess(aInstance);
     nrf5RadioProcess(aInstance);
-    nrf5UartProcess();
+//    nrf5UartProcess();
+
+    if(!otTaskletsArePending(aInstance))
+        {
+        __SEV(); // Clear Event Register 
+        __WFI();
+        }
 }
 
 __WEAK void PlatformEventSignalPending(void)
