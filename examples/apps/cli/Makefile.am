@@ -129,7 +129,7 @@ if OPENTHREAD_EXAMPLES_EFR32
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG1P/Source/GCC/efr32mg1p.ld \
+    -T $(top_srcdir)/examples/platforms/efr32/efr32mg1p.ld \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EFR32
 
