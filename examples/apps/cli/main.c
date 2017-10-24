@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     linkMode.mSecureDataRequests = true;
     otThreadSetLinkMode(sInstance, linkMode);
     otLinkSetPollPeriod(sInstance, 10000);
-
+    otPlatRadioSetDefaultTxPower(sInstance, 8);
     while (1)
     {
         otTaskletsProcess(sInstance);
