@@ -134,7 +134,7 @@ void efr32RadioInit(void)
         assert(false);
     }
 
-    RAIL_TxPowerSet(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER);
+    RAIL_TxPowerSet(10*OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER);
 
     otLogInfoPlat(sInstance, "Initialized", NULL);
 }
@@ -337,7 +337,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     txOption.removeCrc  = false;
     txOption.syncWordId = 0;
 
-    RAIL_TxPowerSet(aFrame->mPower);
+    RAIL_TxPowerSet(10*aFrame->mPower);
     setChannel(aFrame->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
@@ -847,7 +847,7 @@ void RAILCb_FreeMemory(void *aHandle)
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
-    RAIL_TxPowerSet(aPower);
+    RAIL_TxPowerSet(10*aPower);
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
